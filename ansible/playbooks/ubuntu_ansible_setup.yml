@@ -109,7 +109,6 @@
       - ncdu
       - skaffold
       - sops
-      - tilix
       - tldr
     snap_absent:
       - firefox
