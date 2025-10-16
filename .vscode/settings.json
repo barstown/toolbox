@@ -1,0 +1,39 @@
+{
+  "files.trimFinalNewlines": true,
+  "git.autofetch": true,
+  "git.blame.editorDecoration.enabled": true,
+  "git.blame.editorDecoration.template": "${authorName} (${authorDateAgo}) ${subject}",
+  "git.confirmSync": false,
+  "git.enableCommitSigning": true,
+  "redhat.telemetry.enabled": false,
+  "telemetry.feedback.enabled": false,
+  "telemetry.telemetryLevel": "off",
+  "vale.enableSpellcheck": true,
+  "vscode.env.isTelemetryEnabled": false,
+  "vsicons.dontShowNewVersionMessage": true,
+  "workbench.iconTheme": "vscode-icons",
+  "editor.rulers": [
+    80,
+    160
+  ],
+  "todo-tree.general.tags": [
+    "BUG",
+    "FIXME",
+    "HACK",
+    "TODO",
+    "AUDIT",
+  ],
+  "todo-tree.highlights.customHighlight": {
+    "AUDIT": {
+        "icon": "search",
+    },
+  },
+  "todo-tree.filtering.excludeGlobs": [
+    "**/doc/*/**",
+    "**/collections/ansible_collections/*/**",
+    "**/*.md"
+  ],
+  "yaml.customTags": [
+    "!vault scalar"
+  ]
+}
