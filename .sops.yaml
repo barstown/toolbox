@@ -1,0 +1,8 @@
+---
+# https://github.com/getsops/sops?tab=readme-ov-file#513settings
+creation_rules:
+  - path_regex: test.yml
+    age: >-
+      agePublicKey
+    # encrypted_regex: '^(foo|key)$'
+    # encrypted_suffix: 'enc'
