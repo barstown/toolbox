@@ -13,18 +13,22 @@
 
   vars:
     apt_absent:
+      - age
+      - bat
+      - btop
       - containerd
       - docker-compose
       - docker-compose-v2
       - docker-doc
       - docker.io
+      - htop
+      - ncdu
       - neofetch
       - podman-docker
       - runc
+      - tilix
+      - tldr
     apt_present:
-      - age
-      - bat
-      - btop
       - build-essential
       - code
       - containerd.io
@@ -42,16 +46,12 @@
       - gnome-shell-extension-appindicator
       - gnome-software-plugin-flatpak
       - gnome-tweaks
-      - htop
-      - ncdu
       - pipx
       - podman
       - podman-compose
       - python3-debian
       - python3-pip
       - sshpass
-      - tilix
-      - tldr
       - tmux
       - vim
       - zram-config
@@ -97,13 +97,20 @@
       - sh.loft.devpod
     homebrew_absent: []
     homebrew_present:
+      - age
+      - bat
+      - btop
+      - fastfetch
       - gcc
       - helm
+      - htop
       - k9s
       - kubectl
-      - fastfetch
+      - ncdu
       - skaffold
       - sops
+      - tilix
+      - tldr
     snap_absent:
       - firefox
     snap_present: []
