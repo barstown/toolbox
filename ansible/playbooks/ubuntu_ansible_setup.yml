@@ -61,6 +61,7 @@
       - { path: "/home/{{ ansible_env.USERNAME }}/.ssh", mode: "0700" }
       - { path: "/home/{{ ansible_env.USERNAME }}/appimages", mode: "0755" }
       - { path: "/home/{{ ansible_env.USERNAME }}/git", mode: "0755" }
+    flatpak_absent: []
     flatpak_present:
       - app.devsuite.Ptyxis
       - ca.desrt.dconf-editor
@@ -94,6 +95,7 @@
       - org.videolan.VLC
       - page.tesk.Refine
       - sh.loft.devpod
+    homebrew_absent: []
     homebrew_present:
       - gcc
       - helm
@@ -102,8 +104,9 @@
       - fastfetch
       - skaffold
       - sops
-    snaps_absent:
+    snap_absent:
       - firefox
+    snap_present: []
 
   tasks:
     ## VARS ##
@@ -148,19 +151,29 @@
             filename: docker
           become: true
 
-    ## PACKAGES ##
-    - name: Ensure specified snaps are absent
+    ## PACKAGES - SNAP ##
+    - name: Uninstall snap packages
       community.general.snap:
-        name: "{{ snaps_absent }}"
+        name: "{{ snap_absent }}"
         state: absent
       become: true
+      when: snap_absent is defined and snap_absent | length > 0
 
+    - name: Install snap packages
+      community.general.snap:
+        name: "{{ snap_present }}"
+        state: present
+      become: true
+      when: snap_present is defined and snap_present | length > 0
+
+    ## PACKAGES - APT ##
     - name: Uninstall apt packages
       ansible.builtin.apt:
         name: "{{ apt_absent }}"
         state: absent
         update_cache: true
       become: true
+      when: apt_absent is defined and apt_absent | length > 0
 
     - name: Install apt packages
       ansible.builtin.apt:
@@ -168,20 +181,29 @@
         state: present
         update_cache: true
       become: true
+      when: apt_present is defined and apt_present | length > 0
 
+    ## PACKAGES - FLATPAK ##
     - name: Add the flathub flatpak repository remote to the user installation
       community.general.flatpak_remote:
         name: flathub
         state: present
         flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
 
+    - name: Uninstall Flatpak packages
+      community.general.flatpak:
+        name: "{{ flatpak_absent }}"
+        state: absent
+      when: flatpak_absent is defined and flatpak_absent | length > 0
+
     - name: Install Flatpak packages
       community.general.flatpak:
         name: "{{ flatpak_present }}"
         remote: flathub
         state: present
+      when: flatpak_present is defined and flatpak_present | length > 0
 
-    ## HOMEBREW ##
+    ## PACKAGES - HOMEBREW ##
     - name: Check if Homebrew is already installed
       ansible.builtin.stat:
         path: "/home/linuxbrew/.linuxbrew/bin/brew"
@@ -224,16 +246,34 @@
             extra_opts:
               - --strip-components=1
 
-    - name: Install homebrew forumla
+    - name: Uninstall homebrew packages
+      community.general.homebrew:
+        name: "{{ homebrew_absent }}"
+        state: absent
+      when: homebrew_absent is defined and homebrew_absent | length > 0
+
+    - name: Install homebrew packages
       community.general.homebrew:
         name: "{{ homebrew_present }}"
         state: present
         update_homebrew: true
+      when: homebrew_present is defined and homebrew_present | length > 0
 
     ## OTHER ##
-    - name: Add USER to docker group
+    - name: Check if docker group exists and get its members
+      ansible.builtin.getent:
+        database: group
+        key: docker
+      register: docker_group_info
+      failed_when: false
+
+    - name: Add user to docker group if group exists and user not already a member
       ansible.builtin.user:
         name: "{{ ansible_env.USERNAME }}"
         groups: docker
         append: true
       become: true
+      when:
+        - docker_group_info.ansible_facts.getent_group is defined
+        - docker_group_info.ansible_facts.getent_group | length > 0
+        - ansible_env.USERNAME not in docker_group_info.ansible_facts.getent_group.docker
