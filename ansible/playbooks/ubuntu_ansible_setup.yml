@@ -57,10 +57,10 @@
       - zram-config
       - zsh
     directories:
-      - { path: "/home/{{ ansible_env.USERNAME }}/.config/sops/age", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USERNAME }}/.ssh", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USERNAME }}/appimages", mode: "0755" }
-      - { path: "/home/{{ ansible_env.USERNAME }}/git", mode: "0755" }
+      - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
+      - { path: "/home/{{ ansible_env.USER }}/.ssh", mode: "0700" }
+      - { path: "/home/{{ ansible_env.USER }}/appimages", mode: "0755" }
+      - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
     flatpak_absent: []
     flatpak_present:
       - app.devsuite.Ptyxis
@@ -275,11 +275,11 @@
 
     - name: Add user to docker group if group exists and user not already a member
       ansible.builtin.user:
-        name: "{{ ansible_env.USERNAME }}"
+        name: "{{ ansible_env.USER }}"
         groups: docker
         append: true
       become: true
       when:
         - docker_group_info.ansible_facts.getent_group is defined
         - docker_group_info.ansible_facts.getent_group | length > 0
-        - ansible_env.USERNAME not in docker_group_info.ansible_facts.getent_group.docker
+        - ansible_env.USER not in docker_group_info.ansible_facts.getent_group.docker
