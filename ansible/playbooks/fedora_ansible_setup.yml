@@ -1,0 +1,304 @@
+---
+# Setup Fedora Workstation with apps and preferences
+# Pre-requisites:
+#   - sudo apt install python3-libdnf5 python3-pip pipx
+#   - pipx install ansible-core
+#   - pipx inject ansible-core python-debian
+#   - ansible-galaxy collection install community.general
+# Run with: ansible-playbook fedora_ansible_setup.yml -k -K
+
+- name: Fedora workstation setup
+  hosts: localhost
+  gather_facts: true
+
+  vars:
+    dnf_absent:
+      - containerd
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - docker.io
+      - podman-docker
+      - runc
+    dnf_present:
+      - '@vagrant'
+      - '@virtualization'
+      - build-essential
+      - code
+      - containerd.io
+      - distrobox
+      - docker-buildx-plugin
+      - docker-ce
+      - docker-ce-cli
+      - docker-compose-plugin
+      - fd-find
+      - ffmpeg
+      - flatpak
+      - git
+      - gnome-shell-extension-appindicator
+      - gnome-shell-extension-caffeine
+      - gnome-shell-extension-dash-to-dock
+      - gnome-tweaks
+      - gvfs-nfs
+      - NetworkManager-l2tp-gnome
+      - pipx
+      - podman
+      - podman-compose
+      - python3-libdnf5
+      - python3-pip
+      - steam-devices
+      - Thunar
+      - tilix
+      - tmux
+      - variety
+      - vim
+      - zsh
+
+    directories:
+      - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
+      - { path: "/home/{{ ansible_env.USER }}/.ssh", mode: "0700" }
+      - { path: "/home/{{ ansible_env.USER }}/appimages", mode: "0755" }
+      - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
+    flatpak_absent: []
+    flatpak_present:
+      - app.devsuite.Ptyxis
+      - ca.desrt.dconf-editor
+      - com.github.IsmaelMartinez.teams_for_linux
+      - com.github.tchx84.Flatseal
+      - com.mattjakeman.ExtensionManager
+      - com.ranfdev.DistroShelf
+      - com.spotify.Client
+      - com.usebottles.bottles
+      - com.yubico.yubioath
+      - io.github.flattool.Warehouse
+      - io.github.getnf.embellish
+      - io.github.peazip.PeaZip
+      - io.github.realmazharhussain.GdmSettings
+      - io.missioncenter.MissionCenter
+      - io.podman_desktop.PodmanDesktop
+      - it.mijorus.gearlever
+      - me.iepure.devtoolbox
+      - org.chromium.Chromium
+      - org.cryptomator.Cryptomator
+      - org.ferdium.Ferdium
+      - org.filezillaproject.Filezilla
+      - org.gimp.GIMP
+      - org.gnome.seahorse.Application
+      - org.kde.krita
+      - org.libreoffice.LibreOffice
+      - org.mozilla.firefox
+      - org.pipewire.Helvum
+      - org.remmina.Remmina
+      - org.signal.Signal
+      - org.videolan.VLC
+      - page.tesk.Refine
+      - sh.loft.devpod
+    homebrew_absent: []
+    homebrew_present:
+      - age
+      - bat
+      - btop
+      - fastfetch
+      - gcc
+      - git-credential-libsecret
+      - git-credential-oauth
+      - helm
+      - htop
+      - k9s
+      - kubectl
+      - ncdu
+      - opentofu
+      - skaffold
+      - sops
+      - sshpass
+      - syncthing
+      - tldr
+      - wireguard-tools
+
+  tasks:
+    ## VARS ##
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Check if rpm-ostree is installed
+      ansible.builtin.stat:
+        path: /usr/bin/rpm-ostree
+      register: rpm_ostree_bin
+
+    ## HOMEDIR ##
+    - name: Ensure directories exist with specific permissions
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "{{ item.mode }}"
+      loop: "{{ directories }}"
+
+    ## REPOS ##
+    # This task may hang, maybe because it's an .asc file. Might have to import manually.
+    # sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    - name: Add Microsoft repository key
+      ansible.builtin.rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+      become: true
+
+    - name: Add Visual Studio Code repository
+      ansible.builtin.yum_repository:
+        name: vscode
+        description: Visual Studio Code
+        baseurl: https://packages.microsoft.com/yumrepos/vscode
+        gpgcheck: true
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+        enabled: true
+      become: true
+      when: not rpm_ostree_bin.stat.exists
+
+    - name: Add Docker CE repository
+      ansible.builtin.yum_repository:
+        name: docker-ce
+        description: Docker CE Stable
+        baseurl: "https://download.docker.com/linux/fedora/{{ ansible_facts['distribution_major_version'] }}/{{ ansible_facts['architecture'] }}/stable"
+        gpgcheck: true
+        gpgkey: https://download.docker.com/linux/fedora/gpg
+        enabled: true
+      become: true
+      when: not rpm_ostree_bin.stat.exists
+
+    - name: Install RPMFusion Free repo
+      ansible.builtin.dnf:
+        name: https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
+        state: present
+        disable_gpg_check: true
+      become: true
+      when:
+        - ansible_os_family == 'RedHat'
+        - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-free-release-') | list)
+        - not rpm_ostree_bin.stat.exists
+
+    - name: Install RPMFusion Non-Free repo
+      ansible.builtin.dnf:
+        name: https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+        state: present
+        disable_gpg_check: true
+      become: true
+      when:
+        - ansible_os_family == 'RedHat'
+        - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-nonfree-release-') | list)
+        - not rpm_ostree_bin.stat.exists
+
+    ## PACKAGES - DNF ##
+    - name: Uninstall dnf packages
+      ansible.builtin.dnf:
+        name: "{{ dnf_absent }}"
+        state: absent
+        update_cache: true
+      become: true
+      when:
+        - dnf_absent is defined and dnf_absent | length > 0
+        - not rpm_ostree_bin.stat.exists
+
+    - name: Install dnf packages
+      ansible.builtin.dnf:
+        name: "{{ dnf_present }}"
+        state: present
+        update_cache: true
+      become: true
+      when:
+        - dnf_present is defined and dnf_present | length > 0
+        - not rpm_ostree_bin.stat.exists
+
+    ## PACKAGES - FLATPAK ##
+    - name: Add the flathub flatpak repository remote to the user installation
+      community.general.flatpak_remote:
+        name: flathub
+        state: present
+        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+
+    - name: Uninstall Flatpak packages
+      community.general.flatpak:
+        name: "{{ flatpak_absent }}"
+        state: absent
+      when: flatpak_absent is defined and flatpak_absent | length > 0
+
+    - name: Install Flatpak packages
+      community.general.flatpak:
+        name: "{{ flatpak_present }}"
+        remote: flathub
+        state: present
+      when: flatpak_present is defined and flatpak_present | length > 0
+
+    ## PACKAGES - HOMEBREW ##
+    - name: Check if Homebrew is already installed
+      ansible.builtin.stat:
+        path: "/home/linuxbrew/.linuxbrew/bin/brew"
+      register: brew_stat
+
+    - name: Install homebrew if not present
+      when: not brew_stat.stat.exists
+      environment:
+        PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+      block:
+        - name: Create linuxbrew home directory
+          ansible.builtin.file:
+            path: "/home/linuxbrew"
+            state: directory
+            owner: "root"
+            group: "root"
+            mode: '0755'
+          become: true
+
+        - name: Create linuxbrew application directory
+          ansible.builtin.file:
+            path: "/home/linuxbrew/.linuxbrew"
+            state: directory
+            owner: "{{ ansible_env.USER }}"
+            group: "{{ ansible_env.USER }}"
+            mode: '0755'
+          become: true
+
+        - name: Download Homebrew tarball
+          ansible.builtin.get_url:
+            url: https://github.com/Homebrew/brew/tarball/main
+            dest: /tmp/homebrew.tar.gz
+            mode: '0644'
+
+        - name: Extract Homebrew tarball
+          ansible.builtin.unarchive:
+            src: /tmp/homebrew.tar.gz
+            dest: /home/linuxbrew/.linuxbrew
+            remote_src: true
+            extra_opts:
+              - --strip-components=1
+
+    - name: Uninstall homebrew packages
+      community.general.homebrew:
+        name: "{{ homebrew_absent }}"
+        state: absent
+      when: homebrew_absent is defined and homebrew_absent | length > 0
+
+    - name: Install homebrew packages
+      community.general.homebrew:
+        name: "{{ homebrew_present }}"
+        state: present
+        update_homebrew: true
+      when: homebrew_present is defined and homebrew_present | length > 0
+
+    ## OTHER ##
+    - name: Check if docker group exists and get its members
+      ansible.builtin.getent:
+        database: group
+        key: docker
+      register: docker_group_info
+      failed_when: false
+
+    - name: Add user to docker group if group exists and user not already a member
+      ansible.builtin.user:
+        name: "{{ ansible_env.USER }}"
+        groups: docker
+        append: true
+      become: true
+      when:
+        - docker_group_info.ansible_facts.getent_group is defined
+        - docker_group_info.ansible_facts.getent_group | length > 0
+        - ansible_env.USER not in docker_group_info.ansible_facts.getent_group.docker
