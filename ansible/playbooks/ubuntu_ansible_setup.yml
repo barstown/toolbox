@@ -21,6 +21,7 @@
       - docker-compose-v2
       - docker-doc
       - docker.io
+      - git-credential-oauth
       - htop
       - ncdu
       - neofetch
@@ -41,7 +42,6 @@
       - ffmpeg
       - flatpak
       - git
-      - git-credential-oauth
       - gnome-shell-extension-alphabetical-grid
       - gnome-shell-extension-appindicator
       - gnome-software-plugin-flatpak
@@ -107,8 +107,11 @@
       - helm
       - htop
       - k9s
+      - kubecolor
       - kubectl
+      - kubent
       - ncdu
+      - opentofu
       - skaffold
       - sops
       - tldr

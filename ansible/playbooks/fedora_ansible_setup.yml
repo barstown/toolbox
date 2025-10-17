@@ -62,37 +62,58 @@
     flatpak_absent: []
     flatpak_present:
       - app.devsuite.Ptyxis
+      - app.grayjay.Grayjay
       - ca.desrt.dconf-editor
+      - com.bitwarden.desktop
+      - com.calibre_ebook.calibre
       - com.github.IsmaelMartinez.teams_for_linux
       - com.github.tchx84.Flatseal
+      - com.heroicgameslauncher.hgl
       - com.mattjakeman.ExtensionManager
+      - com.orama_interactive.Pixelorama
+      - com.plexamp.Plexamp
+      - com.protonvpn.www
       - com.ranfdev.DistroShelf
       - com.spotify.Client
       - com.usebottles.bottles
+      - com.valvesoftware.Steam
+      - com.vysp3r.ProtonPlus
       - com.yubico.yubioath
+      - fr.handbrake.ghb
+      - io.dbeaver.DBeaverCommunity
       - io.github.flattool.Warehouse
+      - io.github.gen2brain.cbconvert
       - io.github.getnf.embellish
       - io.github.peazip.PeaZip
       - io.github.realmazharhussain.GdmSettings
+      - io.github.spacingbat3.webcord
       - io.missioncenter.MissionCenter
       - io.podman_desktop.PodmanDesktop
       - it.mijorus.gearlever
+      - md.obsidian.Obsidian
       - me.iepure.devtoolbox
+      - me.proton.Pass
+      - net.lutris.Lutris
       - org.chromium.Chromium
       - org.cryptomator.Cryptomator
       - org.ferdium.Ferdium
       - org.filezillaproject.Filezilla
       - org.gimp.GIMP
+      - org.gnome.gitlab.YaLTeR.VideoTrimmer
       - org.gnome.seahorse.Application
       - org.kde.krita
       - org.libreoffice.LibreOffice
       - org.mozilla.firefox
+      - org.openrgb.OpenRGB
       - org.pipewire.Helvum
       - org.remmina.Remmina
       - org.signal.Signal
+      - org.soundconverter.SoundConverter
+      - org.standardnotes.standardnotes
       - org.videolan.VLC
       - page.tesk.Refine
       - sh.loft.devpod
+      - tv.plex.PlexDesktop
     homebrew_absent: []
     homebrew_present:
       - age
@@ -105,7 +126,9 @@
       - helm
       - htop
       - k9s
+      - kubecolor
       - kubectl
+      - kubent
       - ncdu
       - opentofu
       - skaffold
