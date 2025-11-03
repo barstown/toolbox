@@ -103,6 +103,7 @@
       - chezmoi
       - fastfetch
       - gcc
+      - gh
       - helm
       - htop
       - k9s
