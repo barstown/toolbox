@@ -64,6 +64,7 @@
     flatpak_absent: []
     flatpak_present:
       - app.devsuite.Ptyxis
+      - app.drey.Damask
       - ca.desrt.dconf-editor
       - com.github.IsmaelMartinez.teams_for_linux
       - com.github.tchx84.Flatseal
@@ -76,6 +77,7 @@
       - io.github.getnf.embellish
       - io.github.peazip.PeaZip
       - io.github.realmazharhussain.GdmSettings
+      - io.gitlab.adhami3310.Impression
       - io.missioncenter.MissionCenter
       - io.podman_desktop.PodmanDesktop
       - it.mijorus.gearlever
@@ -114,7 +116,7 @@
       - opentofu
       - skaffold
       - sops
-      - tldr
+      - tlrc
     snap_absent:
       - firefox
     snap_present: []
@@ -199,6 +201,7 @@
       community.general.flatpak_remote:
         name: flathub
         state: present
+        method: user
         flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
 
     - name: Uninstall Flatpak packages

@@ -1,9 +1,8 @@
 ---
 # Setup Fedora Workstation with apps and preferences
 # Pre-requisites:
-#   - sudo apt install python3-libdnf5 python3-pip pipx
+#   - sudo dnf install python3-libdnf5 python3-pip pipx
 #   - pipx install ansible-core
-#   - pipx inject ansible-core python-debian
 #   - ansible-galaxy collection install community.general
 # Run with: ansible-playbook fedora_ansible_setup.yml -k -K
 
@@ -21,10 +20,6 @@
       - podman-docker
       - runc
     dnf_present:
-      - '@vagrant'
-      - '@virtualization'
-      - build-essential
-      - code
       - containerd.io
       - distrobox
       - docker-buildx-plugin
@@ -33,6 +28,7 @@
       - docker-compose-plugin
       - fd-find
       - ffmpeg
+      - fish
       - flatpak
       - git
       - gnome-shell-extension-appindicator
@@ -53,6 +49,8 @@
       - variety
       - vim
       - zsh
+      # - '@vagrant'
+      # - '@virtualization'
 
     directories:
       - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
@@ -61,7 +59,7 @@
       - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
     flatpak_absent: []
     flatpak_present:
-      - app.devsuite.Ptyxis
+      - app.drey.Damask
       - app.grayjay.Grayjay
       - ca.desrt.dconf-editor
       - com.bitwarden.desktop
@@ -69,6 +67,7 @@
       - com.github.IsmaelMartinez.teams_for_linux
       - com.github.tchx84.Flatseal
       - com.heroicgameslauncher.hgl
+      - com.jeffser.Alpaca
       - com.mattjakeman.ExtensionManager
       - com.orama_interactive.Pixelorama
       - com.plexamp.Plexamp
@@ -87,6 +86,7 @@
       - io.github.peazip.PeaZip
       - io.github.realmazharhussain.GdmSettings
       - io.github.spacingbat3.webcord
+      - io.gitlab.adhami3310.Impression
       - io.missioncenter.MissionCenter
       - io.podman_desktop.PodmanDesktop
       - it.mijorus.gearlever
@@ -114,29 +114,32 @@
       - page.tesk.Refine
       - sh.loft.devpod
       - tv.plex.PlexDesktop
+      # - app.devsuite.Ptyxis # system install on Bluefin
     homebrew_absent: []
     homebrew_present:
       - age
       - bat
       - btop
-      - fastfetch
       - gcc
-      - git-credential-libsecret
-      - git-credential-oauth
+      - gh
       - helm
       - htop
       - k9s
+      - kind
       - kubecolor
       - kubectl
       - kubent
       - ncdu
       - opentofu
+      - pcsc-lite
+      - ramalama
       - skaffold
       - sops
-      - sshpass
-      - syncthing
-      - tldr
-      - wireguard-tools
+      - talosctl
+      - tlrc
+      # - fastfetch # system install on Bluefin
+      # - syncthing
+      # - wireguard-tools
 
   tasks:
     ## VARS ##
@@ -165,6 +168,7 @@
         key: https://packages.microsoft.com/keys/microsoft.asc
         state: present
       become: true
+      when: not rpm_ostree_bin.stat.exists
 
     - name: Add Visual Studio Code repository
       ansible.builtin.yum_repository:
@@ -232,7 +236,7 @@
         - not rpm_ostree_bin.stat.exists
 
     ## PACKAGES - FLATPAK ##
-    - name: Add the flathub flatpak repository remote to the user installation
+    - name: Add the flathub flatpak repository remote to the system installation
       community.general.flatpak_remote:
         name: flathub
         state: present
