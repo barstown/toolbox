@@ -1,37 +1,25 @@
 ---
-# Setup Ubuntu Workstation with apps and preferences
+# Setup Fedora Workstation with apps and preferences
 # Pre-requisites:
-#   - sudo apt install python3-pip pipx python3-debian
+#   - sudo dnf install python3-libdnf5 python3-pip pipx
 #   - pipx install ansible-core
-#   - pipx inject ansible-core python-debian
 #   - ansible-galaxy collection install community.general
-# Run with: ansible-playbook ubuntu_ansible_setup.yml -k -K
+# Run with: ansible-playbook fedora_ansible_setup.yml -k -K
 
-- name: Ubuntu workstation setup
+- name: Fedora workstation setup
   hosts: localhost
   gather_facts: true
 
   vars:
-    apt_absent:
-      - age
-      - bat
-      - btop
+    dnf_absent:
       - containerd
       - docker-compose
       - docker-compose-v2
       - docker-doc
       - docker.io
-      - git-credential-oauth
-      - htop
-      - ncdu
-      - neofetch
       - podman-docker
       - runc
-      - tilix
-      - tldr
-    apt_present:
-      - build-essential
-      - code
+    dnf_present:
       - containerd.io
       - distrobox
       - docker-buildx-plugin
@@ -40,22 +28,30 @@
       - docker-compose-plugin
       - fd-find
       - ffmpeg
+      - fish
       - flatpak
       - git
-      - gnome-shell-extension-alphabetical-grid
       - gnome-shell-extension-appindicator
-      - gnome-software-plugin-flatpak
+      - gnome-shell-extension-caffeine
+      - gnome-shell-extension-dash-to-dock
       - gnome-tweaks
+      - gvfs-nfs
+      - NetworkManager-l2tp-gnome
       - pipx
       - podman
       - podman-compose
-      - python3-debian
+      - python3-libdnf5
       - python3-pip
-      - sshpass
+      - steam-devices
+      - Thunar
+      - tilix
       - tmux
+      - variety
       - vim
-      - zram-config
       - zsh
+      # - '@vagrant'
+      # - '@virtualization'
+
     directories:
       - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
       - { path: "/home/{{ ansible_env.USER }}/.ssh", mode: "0700" }
@@ -63,69 +59,98 @@
       - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
     flatpak_absent: []
     flatpak_present:
-      - app.devsuite.Ptyxis
       - app.drey.Damask
+      - app.grayjay.Grayjay
       - ca.desrt.dconf-editor
+      - com.bitwarden.desktop
+      - com.calibre_ebook.calibre
       - com.github.IsmaelMartinez.teams_for_linux
       - com.github.tchx84.Flatseal
+      - com.heroicgameslauncher.hgl
+      - com.jeffser.Alpaca
       - com.mattjakeman.ExtensionManager
+      - com.orama_interactive.Pixelorama
+      - com.plexamp.Plexamp
+      - com.protonvpn.www
       - com.ranfdev.DistroShelf
       - com.spotify.Client
       - com.usebottles.bottles
+      - com.valvesoftware.Steam
+      - com.vysp3r.ProtonPlus
       - com.yubico.yubioath
+      - fr.handbrake.ghb
+      - io.dbeaver.DBeaverCommunity
       - io.github.flattool.Warehouse
+      - io.github.gen2brain.cbconvert
       - io.github.getnf.embellish
       - io.github.peazip.PeaZip
       - io.github.realmazharhussain.GdmSettings
+      - io.github.spacingbat3.webcord
       - io.gitlab.adhami3310.Impression
       - io.missioncenter.MissionCenter
       - io.podman_desktop.PodmanDesktop
       - it.mijorus.gearlever
+      - md.obsidian.Obsidian
       - me.iepure.devtoolbox
+      - me.proton.Pass
+      - net.lutris.Lutris
       - org.chromium.Chromium
       - org.cryptomator.Cryptomator
       - org.ferdium.Ferdium
       - org.filezillaproject.Filezilla
       - org.gimp.GIMP
+      - org.gnome.gitlab.YaLTeR.VideoTrimmer
       - org.gnome.seahorse.Application
       - org.kde.krita
       - org.libreoffice.LibreOffice
       - org.mozilla.firefox
+      - org.openrgb.OpenRGB
       - org.pipewire.Helvum
       - org.remmina.Remmina
       - org.signal.Signal
+      - org.soundconverter.SoundConverter
+      - org.standardnotes.standardnotes
       - org.videolan.VLC
       - page.tesk.Refine
       - sh.loft.devpod
+      - tv.plex.PlexDesktop
+      # - app.devsuite.Ptyxis # system install on Bluefin
     homebrew_absent: []
     homebrew_present:
       - age
       - bat
       - btop
-      - chezmoi
-      - fastfetch
       - gcc
       - gh
       - helm
       - htop
       - k9s
+      - kind
       - kubecolor
       - kubectl
       - kubent
       - ncdu
       - opentofu
+      - pcsc-lite
+      - ramalama
       - skaffold
       - sops
+      - talosctl
       - tlrc
-    snap_absent:
-      - firefox
-    snap_present: []
+      # - fastfetch # system install on Bluefin
+      # - syncthing
+      # - wireguard-tools
 
   tasks:
     ## VARS ##
     - name: Gather the package facts
       ansible.builtin.package_facts:
         manager: auto
+
+    - name: Check if rpm-ostree is installed
+      ansible.builtin.stat:
+        path: /usr/bin/rpm-ostree
+      register: rpm_ostree_bin
 
     ## HOMEDIR ##
     - name: Ensure directories exist with specific permissions
@@ -136,72 +161,85 @@
       loop: "{{ directories }}"
 
     ## REPOS ##
-    - name: Add VSCode APT repository
-      ansible.builtin.deb822_repository:
-        name: vscode
-        types: deb
-        uris: "https://packages.microsoft.com/repos/code"
-        signed_by: "https://packages.microsoft.com/keys/microsoft.asc"
-        suites: stable
-        components: main
+    # This task may hang, maybe because it's an .asc file. Might have to import manually.
+    # sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    - name: Add Microsoft repository key
+      ansible.builtin.rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
         state: present
+      become: true
+      when: not rpm_ostree_bin.stat.exists
+
+    - name: Add Visual Studio Code repository
+      ansible.builtin.yum_repository:
+        name: vscode
+        description: Visual Studio Code
+        baseurl: https://packages.microsoft.com/yumrepos/vscode
+        gpgcheck: true
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
         enabled: true
       become: true
+      when: not rpm_ostree_bin.stat.exists
 
-    - name: Add Docker Engine apt key and repository
-      block:
-        - name: Docker | Add apt key
-          ansible.builtin.get_url:
-            url: https://download.docker.com/linux/ubuntu/gpg
-            dest: /etc/apt/keyrings/docker.asc
-            mode: "0644"
-          become: true
-
-        - name: Docker | Add apt repo
-          ansible.builtin.apt_repository:
-            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-            state: present
-            filename: docker
-          become: true
-
-    ## PACKAGES - SNAP ##
-    - name: Uninstall snap packages
-      community.general.snap:
-        name: "{{ snap_absent }}"
-        state: absent
+    - name: Add Docker CE repository
+      ansible.builtin.yum_repository:
+        name: docker-ce
+        description: Docker CE Stable
+        baseurl: "https://download.docker.com/linux/fedora/{{ ansible_facts['distribution_major_version'] }}/{{ ansible_facts['architecture'] }}/stable"
+        gpgcheck: true
+        gpgkey: https://download.docker.com/linux/fedora/gpg
+        enabled: true
       become: true
-      when: snap_absent is defined and snap_absent | length > 0
+      when: not rpm_ostree_bin.stat.exists
 
-    - name: Install snap packages
-      community.general.snap:
-        name: "{{ snap_present }}"
+    - name: Install RPMFusion Free repo
+      ansible.builtin.dnf:
+        name: https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
         state: present
+        disable_gpg_check: true
       become: true
-      when: snap_present is defined and snap_present | length > 0
+      when:
+        - ansible_os_family == 'RedHat'
+        - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-free-release-') | list)
+        - not rpm_ostree_bin.stat.exists
 
-    ## PACKAGES - APT ##
-    - name: Uninstall apt packages
-      ansible.builtin.apt:
-        name: "{{ apt_absent }}"
+    - name: Install RPMFusion Non-Free repo
+      ansible.builtin.dnf:
+        name: https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+        state: present
+        disable_gpg_check: true
+      become: true
+      when:
+        - ansible_os_family == 'RedHat'
+        - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-nonfree-release-') | list)
+        - not rpm_ostree_bin.stat.exists
+
+    ## PACKAGES - DNF ##
+    - name: Uninstall dnf packages
+      ansible.builtin.dnf:
+        name: "{{ dnf_absent }}"
         state: absent
         update_cache: true
       become: true
-      when: apt_absent is defined and apt_absent | length > 0
+      when:
+        - dnf_absent is defined and dnf_absent | length > 0
+        - not rpm_ostree_bin.stat.exists
 
-    - name: Install apt packages
-      ansible.builtin.apt:
-        name: "{{ apt_present }}"
+    - name: Install dnf packages
+      ansible.builtin.dnf:
+        name: "{{ dnf_present }}"
         state: present
         update_cache: true
       become: true
-      when: apt_present is defined and apt_present | length > 0
+      when:
+        - dnf_present is defined and dnf_present | length > 0
+        - not rpm_ostree_bin.stat.exists
 
     ## PACKAGES - FLATPAK ##
-    - name: Add the flathub flatpak repository remote to the user installation
+    - name: Add the flathub flatpak repository remote to the system installation
       community.general.flatpak_remote:
         name: flathub
         state: present
-        method: user
         flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
 
     - name: Uninstall Flatpak packages
