@@ -68,6 +68,7 @@
       - com.github.tchx84.Flatseal
       - com.heroicgameslauncher.hgl
       - com.jeffser.Alpaca
+      - com.jeffser.Alpaca.Plugins.Ollama
       - com.mattjakeman.ExtensionManager
       - com.orama_interactive.Pixelorama
       - com.plexamp.Plexamp
