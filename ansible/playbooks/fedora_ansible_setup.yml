@@ -312,6 +312,23 @@
         update_homebrew: true
       when: homebrew_present is defined and homebrew_present | length > 0
 
+    ## GPU SPECIFIC SETUP ##
+    - name: Check for AMD GPU
+      ansible.builtin.shell:
+        cmd: "lspci | grep -i 'VGA compatible controller: Advanced Micro Devices'"
+      register: amd_gpu
+      ignore_errors: true
+      failed_when: "amd_gpu.rc not in [0, 1]"
+      changed_when: "amd_gpu.rc not in [0, 1]"
+
+    - name: Install additional Flatpak packages
+      community.general.flatpak:
+        name:
+          - com.jeffser.Alpaca.Plugins.AMD
+        remote: flathub
+        state: present
+      when: "amd_gpu.rc == 0 and ansible_os_family == 'RedHat'"
+
     ## OTHER ##
     - name: Check if docker group exists and get its members
       ansible.builtin.getent:
