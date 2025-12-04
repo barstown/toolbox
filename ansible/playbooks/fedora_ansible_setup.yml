@@ -81,6 +81,7 @@
       - com.yubico.yubioath
       - fr.handbrake.ghb
       - io.dbeaver.DBeaverCommunity
+      - io.github.aandrew_me.ytdn
       - io.github.flattool.Warehouse
       - io.github.gen2brain.cbconvert
       - io.github.getnf.embellish
@@ -136,8 +137,11 @@
       - ramalama
       - skaffold
       - sops
+      - starship # in bluefin-dx
+      - talhelper
       - talosctl
       - tlrc
+      - yq # in bluefin-dx
       # - fastfetch # system install on Bluefin
       # - syncthing
       # - wireguard-tools

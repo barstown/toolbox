@@ -116,7 +116,9 @@
       - opentofu
       - skaffold
       - sops
+      - starship
       - tlrc
+      - yq
     snap_absent:
       - firefox
     snap_present: []
