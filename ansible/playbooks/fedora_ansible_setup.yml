@@ -122,9 +122,11 @@
       - age
       - bat
       - btop
+      - fluxcd/tap/flux
       - gcc
       - gh
       - helm
+      - helmfile
       - htop
       - k9s
       - kind
@@ -141,6 +143,7 @@
       - talhelper
       - talosctl
       - tlrc
+      - uv
       - yq # in bluefin-dx
       # - fastfetch # system install on Bluefin
       # - syncthing

@@ -107,6 +107,7 @@
       - gcc
       - gh
       - helm
+      - helmfile
       - htop
       - k9s
       - kubecolor
@@ -118,6 +119,7 @@
       - sops
       - starship
       - tlrc
+      - uv
       - yq
     snap_absent:
       - firefox
