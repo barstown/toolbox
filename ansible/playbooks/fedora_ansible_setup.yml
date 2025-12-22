@@ -133,6 +133,7 @@
       - kubecolor
       - kubectl
       - kubent
+      - mise
       - ncdu
       - opentofu
       - pcsc-lite
