@@ -53,10 +53,10 @@
       # - '@virtualization'
 
     directories:
-      - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USER }}/.ssh", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USER }}/appimages", mode: "0755" }
-      - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/.config/sops/age", mode: "0700" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/.ssh", mode: "0700" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/appimages", mode: "0755" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/git", mode: "0755" }
     flatpak_absent: []
     flatpak_present:
       - app.drey.Damask
@@ -203,23 +203,23 @@
 
     - name: Install RPMFusion Free repo
       ansible.builtin.dnf:
-        name: https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
+        name: https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm
         state: present
         disable_gpg_check: true
       become: true
       when:
-        - ansible_os_family == 'RedHat'
+        - ansible_facts['os_family'] == 'RedHat'
         - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-free-release-') | list)
         - not rpm_ostree_bin.stat.exists
 
     - name: Install RPMFusion Non-Free repo
       ansible.builtin.dnf:
-        name: https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+        name: https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm
         state: present
         disable_gpg_check: true
       become: true
       when:
-        - ansible_os_family == 'RedHat'
+        - ansible_facts['os_family'] == 'RedHat'
         - not (ansible_facts.packages.keys() | select('search', '^rpmfusion-nonfree-release-') | list)
         - not rpm_ostree_bin.stat.exists
 
@@ -288,8 +288,8 @@
           ansible.builtin.file:
             path: "/home/linuxbrew/.linuxbrew"
             state: directory
-            owner: "{{ ansible_env.USER }}"
-            group: "{{ ansible_env.USER }}"
+            owner: "{{ ansible_facts['env']['USER'] }}"
+            group: "{{ ansible_facts['env']['USER'] }}"
             mode: '0755'
           become: true
 
@@ -335,7 +335,7 @@
           - com.jeffser.Alpaca.Plugins.AMD
         remote: flathub
         state: present
-      when: "amd_gpu.rc == 0 and ansible_os_family == 'RedHat'"
+      when: "amd_gpu.rc == 0 and ansible_facts['os_family'] == 'RedHat'"
 
     ## OTHER ##
     - name: Check if docker group exists and get its members
@@ -347,11 +347,11 @@
 
     - name: Add user to docker group if group exists and user not already a member
       ansible.builtin.user:
-        name: "{{ ansible_env.USER }}"
+        name: "{{ ansible_facts['env']['USER'] }}"
         groups: docker
         append: true
       become: true
       when:
         - docker_group_info.ansible_facts.getent_group is defined
         - docker_group_info.ansible_facts.getent_group | length > 0
-        - ansible_env.USER not in docker_group_info.ansible_facts.getent_group.docker
+        - ansible_facts['env']['USER'] not in docker_group_info.ansible_facts.getent_group.docker

@@ -57,10 +57,10 @@
       - zram-config
       - zsh
     directories:
-      - { path: "/home/{{ ansible_env.USER }}/.config/sops/age", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USER }}/.ssh", mode: "0700" }
-      - { path: "/home/{{ ansible_env.USER }}/appimages", mode: "0755" }
-      - { path: "/home/{{ ansible_env.USER }}/git", mode: "0755" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/.config/sops/age", mode: "0700" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/.ssh", mode: "0700" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/appimages", mode: "0755" }
+      - { path: "/home/{{ ansible_facts['env']['USER'] }}/git", mode: "0755" }
     flatpak_absent: []
     flatpak_present:
       - app.devsuite.Ptyxis
@@ -164,7 +164,7 @@
 
         - name: Docker | Add apt repo
           ansible.builtin.apt_repository:
-            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable" # noqa: yaml[line-length]
             state: present
             filename: docker
           become: true
@@ -231,7 +231,7 @@
     - name: Install homebrew if not present
       when: not brew_stat.stat.exists
       environment:
-        PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_env.PATH }}"
+        PATH: "/home/linuxbrew/.linuxbrew/bin:{{ ansible_facts['env']['PATH'] }}"
       block:
         - name: Create linuxbrew home directory
           ansible.builtin.file:
@@ -246,8 +246,8 @@
           ansible.builtin.file:
             path: "/home/linuxbrew/.linuxbrew"
             state: directory
-            owner: "{{ ansible_env.USER }}"
-            group: "{{ ansible_env.USER }}"
+            owner: "{{ ansible_facts['env']['USER'] }}"
+            group: "{{ ansible_facts['env']['USER'] }}"
             mode: '0755'
           become: true
 
@@ -288,11 +288,11 @@
 
     - name: Add user to docker group if group exists and user not already a member
       ansible.builtin.user:
-        name: "{{ ansible_env.USER }}"
+        name: "{{ ansible_facts['env']['USER'] }}"
         groups: docker
         append: true
       become: true
       when:
         - docker_group_info.ansible_facts.getent_group is defined
         - docker_group_info.ansible_facts.getent_group | length > 0
-        - ansible_env.USER not in docker_group_info.ansible_facts.getent_group.docker
+        - ansible_facts['env']['USER'] not in docker_group_info.ansible_facts.getent_group.docker
